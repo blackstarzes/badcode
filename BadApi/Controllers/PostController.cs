@@ -15,15 +15,24 @@ namespace BadApi.Controllers
 	[RoutePrefix("api/post")]
     public class PostController : BaseApiController
     {
+		private static List<Post> _postCache = new List<Post>();
+
 		[HttpGet]
 		[Route("")]
 		public async Task<Post> GetPost(long id)
 		{
 			try
 			{
+				if (_postCache.Any(p => p.PostId == id))
+				{
+					return _postCache.First(p => p.PostId == id);
+				}
+
 				using (var connection = GetConnection())
 				{
-					return await connection.QueryFirstAsync<Post>(string.Format("SELECT * FROM dbo.Post WHERE PostId = {0}", id));
+					var post = await connection.QueryFirstAsync<Post>(string.Format("SELECT * FROM dbo.Post WHERE PostId = {0}", id));
+					_postCache.Add(post);
+					return post;
 				}
 			}
 			catch (Exception ex)
