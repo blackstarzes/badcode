@@ -191,6 +191,8 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Domain\Account.cs" />
+    <Compile Include="Helpers\AccountHelper.cs" />
+    <Compile Include="Models\Account\AccountModel.cs" />
     <Compile Include="Models\Account\LoginModel.cs" />
     <Compile Include="Models\Post\Class1.cs" />
     <Compile Include="Models\Post\CreatePostModel.cs" />

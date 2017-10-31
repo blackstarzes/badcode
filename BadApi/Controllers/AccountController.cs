@@ -27,5 +27,16 @@ namespace BadApi.Controllers
 			var users = await connection.QueryAsync<Account>("SELECT * FROM dbo.Account;");
 			return users.First(u => u.EmailAddress == model.EmailAddress && u.Password == model.Password);
         }
+
+		[AllowAnonymous]
+		[HttpGet]
+		[Route("{id}")]
+		public async Task<AccountModel> GetAccount(long id)
+		{
+
+			var connection = GetConnection();
+			var account = await connection.QueryFirstOrDefaultAsync<Account>("SELECT * FROM dbo.Account WHERE AccountId = @AccountId;", new { AccountId = id });
+			return new AccountModel { AccountId = account.AccountId, EmailAddress = account.EmailAddress, Password = account.Password };
+		}
     }
 }
