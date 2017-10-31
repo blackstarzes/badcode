@@ -186,12 +186,15 @@
     <Compile Include="Controllers\PostController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="Domain\Post.cs" />
+    <Compile Include="Domain\Rank.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Domain\Account.cs" />
     <Compile Include="Models\Account\LoginModel.cs" />
+    <Compile Include="Models\Post\Class1.cs" />
     <Compile Include="Models\Post\CreatePostModel.cs" />
+    <Compile Include="Models\Post\RankPostModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

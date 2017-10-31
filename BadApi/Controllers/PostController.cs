@@ -15,11 +15,11 @@ namespace BadApi.Controllers
 	[RoutePrefix("api/post")]
     public class PostController : BaseApiController
     {
-		private static List<Post> _postCache = new List<Post>();
+		private static List<ViewPostModel> _postCache = new List<ViewPostModel>();
 
 		[HttpGet]
 		[Route("")]
-		public async Task<Post> GetPost(long id)
+		public async Task<ViewPostModel> GetPost(long id)
 		{
 			try
 			{
@@ -31,13 +31,26 @@ namespace BadApi.Controllers
 				using (var connection = GetConnection())
 				{
 					var post = await connection.QueryFirstAsync<Post>(string.Format("SELECT * FROM dbo.Post WHERE PostId = {0}", id));
-					_postCache.Add(post);
-					return post;
+					var myRank = await connection.QueryFirstOrDefaultAsync<Rank>(string.Format("SELECT * FROM dbo.Rank WHERE PostId = {0} AND AccountId = 1", id));
+					var positives = await connection.ExecuteScalarAsync<int>(string.Format("SELECT COUNT(*) FROM dbo.Rank WHERE PostId = {0} AND IsPositive = 1", id));
+					var negatives = await connection.ExecuteScalarAsync<int>(string.Format("SELECT COUNT(*) FROM dbo.Rank WHERE PostId = {0} AND IsPositive = 0", id));
+					var postModel = new ViewPostModel
+					{
+						PostId = post.PostId,
+						AccountId = post.AccountId,
+						Content = post.Content,
+						DateTimeCreatedUtc = post.DateTimeCreatedUtc,
+						MyRank = myRank?.IsPositive,
+						Positives = positives,
+						Negatives = negatives
+					};
+					_postCache.Add(postModel);
+					return postModel;
 				}
 			}
 			catch (Exception ex)
 			{
-				return new Post { PostId = -1, AccountId = -1, Content = "No post found", DateTimeCreatedUtc = DateTime.UtcNow };
+				return new ViewPostModel { PostId = -1, AccountId = -1, Content = "No post found", DateTimeCreatedUtc = DateTime.UtcNow, MyRank = null, Positives = 0, Negatives = 0 };
 			}
 		}
 
@@ -57,6 +70,30 @@ namespace BadApi.Controllers
 			{
 				throw ex;
 				return -1;
+			}
+		}
+
+		[Route("rank")]
+		[HttpPost]
+		public async Task RankPost([FromBody] RankPostModel model)
+		{
+			try
+			{
+				using (var connection = GetConnection())
+				{
+					if (connection.QueryFirstOrDefault<Rank>("SELECT * FROM dbo.Rank WHERE PostId = @PostId AND AccountId = @AccountId", new { model.PostId, model.AccountId }) == null)
+					{
+						connection.ExecuteAsync("INSERT INTO dbo.Rank ( PostId, AccountId, IsPositive ) VALUES ( @PostId, @AccountId, @IsPositive )", model);
+					}
+					else
+					{
+						connection.ExecuteAsync("UPDATE dbo.Rank SET IsPositive = @IsPositive WHERE PostId = @PostId AND AccountId = @AccountId", model);
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				throw ex;
 			}
 		}
     }
